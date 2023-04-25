@@ -4,7 +4,10 @@
  */
 namespace FishPig\DataLayer\Event\DataProvider;
 
-abstract class AbstractDataProvider implements \FishPig\DataLayer\Api\DataLayerEventDataProviderInterface, \Magento\Framework\View\Element\Block\ArgumentInterface
+use FishPig\DataLayer\Api\DataLayerEventDataProviderInterface;
+use Magento\Framework\View\Element\Block\ArgumentInterface;
+
+abstract class AbstractDataProvider implements DataLayerEventDataProviderInterface, ArgumentInterface
 {
     /**
      *

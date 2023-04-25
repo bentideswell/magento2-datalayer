@@ -7,4 +7,10 @@
             </argument>
         </arguments>
     </type>
+
+    <type name="FishPig\DataLayer\Block\Event\Purchase">
+        <arguments>
+            <argument name="dataProvider" xsi:type="object">FishPig\DataLayer\Event\DataProvider\Purchase</argument>
+        </arguments>
+    </type>
 </config>

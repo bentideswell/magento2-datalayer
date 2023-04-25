@@ -4,11 +4,7 @@
       xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
         <referenceContainer name="content">
-            <block class="FishPig\DataLayer\Block\Event" name="datalayer.event.purchase">
-                <action method="setDataProvider">
-                    <argument name="dataProvider" xsi:type="object">\FishPig\DataLayer\Event\DataProvider\Purchase</argument>
-                </action>
-            </block>
+            <block class="FishPig\DataLayer\Block\Event\Purchase" name="datalayer.event.purchase"/>
         </referenceContainer>
     </body>
 </page>

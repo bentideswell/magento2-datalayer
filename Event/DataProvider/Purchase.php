@@ -22,23 +22,13 @@ class Purchase extends AbstractDataProvider
     /**
      *
      */
-    private $checkoutSession = null;
-
-    /**
-     *
-     */
-    public function __construct(
-        \Magento\Checkout\Model\Session\Proxy $checkoutSession
-    ) {
-        $this->checkoutSession = $checkoutSession;
-    }
-
-    /**
-     *
-     */
     public function getData(): ?array
     {
         if (($order = $this->getOrder()) === null) {
+            return null;
+        }
+
+        if (!$order->getId()) {
             return null;
         }
 
@@ -92,15 +82,23 @@ class Purchase extends AbstractDataProvider
      */
     public function getOrderItemVariant(OrderItemInterface $orderItem): array
     {
-        $data = [];
         if ($childItems = $orderItem->getChildrenItems()) {
             foreach ($childItems as $childItem) {
-                $data['item_variant'] = $childItem->getName();
-                break;
+                return [
+                    'item_variant' => $childItem->getName()
+                ];
             }
         }
 
-        return $data;
+        if ($options = $orderItem->getProductOptions()) {
+            if (!empty($options['options'])) {
+                foreach ($options['options'] as $option) {
+                    return [
+                        'item_variant' => $option['print_value'] ?? $option['value']
+                    ];
+                }
+            }
+        }
     }
 
     /**
@@ -149,10 +147,6 @@ class Purchase extends AbstractDataProvider
      */
     public function getOrder(): ?OrderInterface
     {
-        if ($this->order === null) {
-            $this->order = $this->findOrder();
-        }
-
         return $this->order;
     }
 
@@ -163,17 +157,5 @@ class Purchase extends AbstractDataProvider
     {
         $this->order = $order;
         return $this;
-    }
-
-    /**
-     *
-     */
-    private function findOrder(): ?OrderInterface
-    {
-        if ($order = $this->checkoutSession->getLastRealOrder()) {
-            return $order;
-        }
-
-        return null;
     }
 }
