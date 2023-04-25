@@ -1,7 +1,7 @@
 {
     "name": "fishpig/magento2-datalayer",
     "description": "A very simple data layer module for Magento 2.",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "require": {
         "php": ">=7.4",
         "magento/framework": "*"

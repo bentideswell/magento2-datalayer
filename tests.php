@@ -6,10 +6,15 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-require __DIR__ . '/../../../../app/bootstrap.php';
+for ($i = 3; $i <= 4; $i++) {
+    $path = __DIR__ . str_repeat('/..', $i) . '/app/bootstrap.php';
+    if (is_file($path)) {
+        require $path;
+        break;
+    }
+}
 
 $objectManager = \Magento\Framework\App\Bootstrap::create(BP, $_SERVER)->getObjectManager();
-
 $objectManager->get(\Magento\Framework\App\State::class)->setAreaCode('frontend');
 
 
@@ -30,6 +35,8 @@ try {
             exit(1);
         }
     }
+
+    echo "OK";
 } catch (\Throwable $e) {
     echo $e;
     exit(1);

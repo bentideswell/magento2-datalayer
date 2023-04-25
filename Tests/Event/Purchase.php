@@ -134,7 +134,7 @@ class Purchase extends \FishPig\DataLayer\Tests\AbstractTest
             if (!is_array($value)) {
                 $this->doVariablesMatch(
                     1,
-                    (int)(strpos($eventHtml, $value) !== false),
+                    (int)(strpos($eventHtml, (string)$value) !== false),
                     'eventHTML.contains($' . $key . ')'
                 );
             }
