@@ -99,6 +99,8 @@ class Purchase extends AbstractDataProvider
                 }
             }
         }
+
+        return [];
     }
 
     /**
