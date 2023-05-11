@@ -11,9 +11,10 @@ class Purchase extends \FishPig\DataLayer\Tests\AbstractTest
      */
     private $orderFactory = null;
     private $orderItemFactory = null;
+    private $orderCollectionFactory = null;
     private $productFactory = null;
     private $purchaseEventDataProvider = null;
-    private $eventBlockFactory = null;
+    private $purchaseBlockFactory = null;
 
     /**
      *
@@ -21,15 +22,17 @@ class Purchase extends \FishPig\DataLayer\Tests\AbstractTest
     public function __construct(
         \Magento\Sales\Model\OrderFactory $orderFactory,
         \Magento\Sales\Model\Order\ItemFactory $orderItemFactory,
+        \Magento\Sales\Model\ResourceModel\Order\CollectionFactory $orderCollectionFactory,
         \Magento\Catalog\Model\ProductFactory $productFactory,
         \FishPig\DataLayer\Event\DataProvider\Purchase $purchaseEventDataProvider,
-        \FishPig\DataLayer\Block\EventFactory $eventBlockFactory
+        \FishPig\DataLayer\Block\Event\PurchaseFactory $purchaseBlockFactory
     ) {
         $this->orderFactory = $orderFactory;
         $this->orderItemFactory = $orderItemFactory;
+        $this->orderCollectionFactory = $orderCollectionFactory;
         $this->productFactory = $productFactory;
         $this->purchaseEventDataProvider = $purchaseEventDataProvider;
-        $this->eventBlockFactory = $eventBlockFactory;
+        $this->purchaseBlockFactory = $purchaseBlockFactory;
     }
 
     /**
@@ -39,6 +42,7 @@ class Purchase extends \FishPig\DataLayer\Tests\AbstractTest
     {
         return \FishPig\DataLayer\Event\DataProvider\Purchase::EVENT;
     }
+
 
     /**
      *
@@ -51,12 +55,11 @@ class Purchase extends \FishPig\DataLayer\Tests\AbstractTest
             'order_currency_code' => 'XYZ',
             'grand_total' => $this->getRandomPrice(50, 99),
             'tax_amount' => $this->getRandomPrice(6, 9),
-            'shipping_amount' => $this->getRandomPrice(1, 5),
+            'shipping_incl_tax' => $this->getRandomPrice(1, 5),
             'coupon_code' => 'RANDOM_COUPON'
         ];
 
         $order->addData($inputData);
-
 
         $parentProduct = $this->productFactory->create()
             ->setId(1)
@@ -76,7 +79,7 @@ class Purchase extends \FishPig\DataLayer\Tests\AbstractTest
                 ->setName($product->getName())
                 ->setProductId($product->getId())
                 ->setSku($product->getSku())
-                ->setPrice($product->getPrice())
+                ->setPriceInclTax($product->getPrice())
                 ->setProduct(
                     $product
                 )->setQtyOrdered(
@@ -90,14 +93,16 @@ class Purchase extends \FishPig\DataLayer\Tests\AbstractTest
 
         $order->setData('items', $orderItems);
 
-        $pushData = $this->purchaseEventDataProvider->setOrder($order)->getData();
+        $pushData = $this->purchaseEventDataProvider->setOrder(
+            $order
+        )->getData();
 
         foreach ([
             'transaction_id' => 'increment_id',
             'currency' => 'order_currency_code',
             'value' => 'grand_total',
             'tax' => 'tax_amount',
-            'shipping' => 'shipping_amount',
+            'shipping' => 'shipping_incl_tax',
             'coupon' => 'coupon_code'
         ] as $a => $b) {
             $this->doVariablesMatch(
@@ -126,7 +131,7 @@ class Purchase extends \FishPig\DataLayer\Tests\AbstractTest
         }
 
         // Now generate event block and check output
-        $eventHtml = $this->eventBlockFactory->create()->setDataProvider(
+        $eventHtml = $this->purchaseBlockFactory->create()->setDataProvider(
             $this->purchaseEventDataProvider
         )->toHtml();
 
@@ -136,6 +141,29 @@ class Purchase extends \FishPig\DataLayer\Tests\AbstractTest
                     1,
                     (int)(strpos($eventHtml, (string)$value) !== false),
                     'eventHTML.contains($' . $key . ')'
+                );
+            }
+        }
+
+        $orders = $this->orderCollectionFactory->create();
+        $orders->setOrder('created_at', 'desc');
+        $orders->setPageSize(10);
+
+        foreach ($orders as $order) {
+            $pushData = $this->purchaseEventDataProvider->setOrder(
+                $order
+            )->getData();
+
+            $this->doVariablesMatch(
+                0,
+                (int)empty($pushData['ecommerce']['items'][0])
+            );
+
+            foreach (['item_category', 'item_brand'] as $key) {
+                $this->doVariablesMatch(
+                    0,
+                    (int)empty($pushData['ecommerce']['items'][0][$key]),
+                    $key
                 );
             }
         }
@@ -153,5 +181,20 @@ class Purchase extends \FishPig\DataLayer\Tests\AbstractTest
         }
 
         return (float)$value;
+    }
+
+    /**
+     *
+     */
+    private function debugByOrderId(int $orderId): void
+    {
+        print_r(
+            $this->purchaseEventDataProvider->setOrder(
+                $this->orderFactory->create()->load(
+                    $orderId
+                )
+            )->getData()
+        );
+        exit;
     }
 }

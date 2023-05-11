@@ -22,13 +22,27 @@ class Purchase extends AbstractDataProvider
     /**
      *
      */
+    private $salesHelper = null;
+
+    /**
+     *
+     */
+    public function __construct(
+        \FishPig\DataLayer\Event\DataProvider\Helper\Sales $salesHelper
+    ) {
+        $this->salesHelper = $salesHelper;
+    }
+
+    /**
+     *
+     */
     public function getData(): ?array
     {
         if (($order = $this->getOrder()) === null) {
             return null;
         }
 
-        if (!$order->getId()) {
+        if (!$order->getId() && !$order->getIncrementId()) {
             return null;
         }
 
@@ -38,7 +52,7 @@ class Purchase extends AbstractDataProvider
                 'currency' => $order->getOrderCurrencyCode(),
                 'value' => (float)$order->getGrandTotal(),
                 'tax' => (float)$order->getTaxAmount(),
-                'shipping' =>  (float)$order->getShippingAmount(),
+                'shipping' =>  (float)$order->getShippingInclTax(),
                 'transaction_id' => $order->getIncrementId(),
                 'coupon' => $order->getCouponCode() ?? '',
                 'items' => []
@@ -69,10 +83,11 @@ class Purchase extends AbstractDataProvider
             [
                 'item_name' => $orderItem->getName(),
                 'item_id' => $orderItem->getSku(),
-                'price' => (float)$orderItem->getPrice(),
+                'price' => (float)$orderItem->getPriceInclTax(),
                 'quantity' => (int)$orderItem->getQtyOrdered(),
             ],
-            $this->getOrderItemCategories($orderItem),
+            $this->salesHelper->getCategoryData($orderItem),
+            $this->salesHelper->getBrandData($orderItem),
             $this->getOrderItemVariant($orderItem)
         );
     }
@@ -101,47 +116,6 @@ class Purchase extends AbstractDataProvider
         }
 
         return [];
-    }
-
-    /**
-     *
-     */
-    public function getOrderItemCategories(OrderItemInterface $orderItem): array
-    {
-        $data = [];
-        $categories = $orderItem->getProduct()
-            ->getCategoryCollection()
-            ->addAttributeToSelect([
-                'name'
-            ])->addAttributeToFilter(
-                'level',
-                ['gt' => 2]
-            )->addAttributeToFilter(
-                'is_active',
-                1
-            )->setPageSize(
-                4
-            )->setOrder(
-                'position',
-                'desc'
-            );
-
-        if (count($categories) === 0) {
-            return $data;
-        }
-
-        $index = 1;
-
-        foreach ($categories as $category) {
-            if (in_array($category->getName(), $data)) {
-                continue;
-            }
-            $key = 'item_category' . ($index === 1 ? '' : $index);
-            $data[$key] = $category->getName();
-            ++$index;
-        }
-
-        return $data;
     }
 
     /**

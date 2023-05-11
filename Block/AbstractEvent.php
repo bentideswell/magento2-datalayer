@@ -6,7 +6,7 @@ namespace FishPig\DataLayer\Block;
 
 use FishPig\DataLayer\Api\DataLayerEventDataProviderInterface;
 
-class Event extends \Magento\Framework\View\Element\AbstractBlock
+abstract class AbstractEvent extends \Magento\Framework\View\Element\AbstractBlock
 {
     /**
      * @var ?DataLayerEventDataProviderInterface

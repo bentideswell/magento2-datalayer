@@ -6,6 +6,6 @@ namespace FishPig\DataLayer\Block\Event;
 
 use FishPig\DataLayer\Api\DataLayerEventDataProviderInterface;
 
-class Purchase extends \FishPig\DataLayer\Block\AbstractEvent
+class ViewItem extends \FishPig\DataLayer\Block\AbstractEvent
 {
 }

@@ -4,13 +4,19 @@
         <arguments>
             <argument name="tests" xsi:type="array">
                 <item name="event_purchase" xsi:type="object">FishPig\DataLayer\Tests\Event\Purchase</item>
+                <item name="event_view_item"
+                      xsi:type="object">FishPig\DataLayer\Tests\Event\ViewItem</item>
             </argument>
         </arguments>
     </type>
-
     <type name="FishPig\DataLayer\Block\Event\Purchase">
         <arguments>
             <argument name="dataProvider" xsi:type="object">FishPig\DataLayer\Event\DataProvider\Purchase</argument>
+        </arguments>
+    </type>
+    <type name="FishPig\DataLayer\Block\Event\ViewItem">
+        <arguments>
+            <argument name="dataProvider" xsi:type="object">FishPig\DataLayer\Event\DataProvider\ViewItem</argument>
         </arguments>
     </type>
 </config>
