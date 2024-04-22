@@ -56,7 +56,8 @@ class Purchase extends AbstractDataProvider
                 'transaction_id' => $order->getIncrementId(),
                 'coupon' => $order->getCouponCode() ?? '',
                 'items' => []
-            ]
+            ],
+            'user_data' => $this->getOrderUserData($order)
         ];
 
         foreach ($order->getItems() as $orderItem) {
@@ -133,5 +134,56 @@ class Purchase extends AbstractDataProvider
     {
         $this->order = $order;
         return $this;
+    }
+
+    /**
+     *
+     */
+    public function getOrderUserData(?OrderInterface $order): ?array
+    {
+        $address = $order->getBillingAddress() ?: $order->getShippingAddress();
+
+        if (!$address) {
+            return null;
+        }
+
+        return [
+            'email' => $order->getCustomerEmail(),
+            'tel' => $this->getTelephone($address->getTelephone()),
+            'address' => [
+                'first_name' => $order->getCustomerFirstname(),
+                'last_name' => $order->getCustomerLastname(),
+                'street' => implode(
+                    ', ',
+                    array_map(
+                        'trim',
+                        array_filter(
+                            array_unique(
+                                $address->getStreet()
+                            )
+                        )
+                    )
+                ),
+                'city' => $address->getCity(),
+                'region' => $address->getRegion(),
+                'postal_code' => $address->getPostcode(),
+                'country' => $address->getCountryId()
+            ]
+        ];
+    }
+
+
+    /**
+     *
+     */
+    private function getTelephone($input): ?string
+    {
+        $tel = str_replace(' ', '', trim($input ?? ''));
+
+        if (strpos($tel, '+') !== 0) {
+            $tel = preg_replace('/^0/', '+44', $tel);
+        }
+
+        return $tel;
     }
 }
